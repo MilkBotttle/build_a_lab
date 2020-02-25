@@ -1,0 +1,24 @@
+- hosts: all
+  gather_facts: no
+  tasks:
+    - name: Create ssh proxy service
+      copy:
+        src: files/proxy.service
+        dest: /usr/lib/systemd/system/proxyvm.service
+      register: copy_service
+
+    - name: Start proxy
+      systemd:
+        daemon_reload: yes
+        service: proxy
+        enabled: yes
+        state: started
+      when: copy_service.changed
+
+    - name: Create virsh net
+      virt_net:
+        command: define
+        name: "{{ item }}"
+		xml: "files/{{ item }}.xml"
+      with_items: [ "pxe","internal","nat"]
+

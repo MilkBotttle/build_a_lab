@@ -1,0 +1,14 @@
+[Unit]
+Description= Create ssh port forward to vm
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/ssh -o ServerAliveInterval=60 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -T -ND 0.0.0.0:8888 192.168.122.1
+
+# Restart every >2 seconds to avoid StartLimitInterval failure
+RestartSec=5
+Restart=always
+
+
+[Install]
+WantedBy=multi-user.target
