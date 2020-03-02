@@ -1,4 +1,5 @@
-- hosts: all
+- hosts: localhost
+  connection: local
   gather_facts: no
   tasks:
     - name: Create ssh proxy service
@@ -10,15 +11,29 @@
     - name: Start proxy
       systemd:
         daemon_reload: yes
-        service: proxy
+        service: proxyvm
         enabled: yes
         state: started
       when: copy_service.changed
 
-    - name: Create virsh net
+    - name: Create virsh net pxe
       virt_net:
         command: define
-        name: "{{ item }}"
-        xml: "files/{{ item }}.xml"
-      with_items: [ "pxe","internal","nat"]
+        name: "pxe"
+        xml: '{{ lookup("template", "files/pxe.xml") }}' 
+
+    - name: Create virsh net internal
+      virt_net:
+        command: define
+        name: "internal"
+        xml: '{{ lookup("template", "files/internal.xml") }}' 
+
+    - name: Create virsh net nat
+      virt_net:
+        command: define
+        name: "nat"
+        xml: '{{ lookup("template", "files/nat.xml") }}'
+
+
+
 

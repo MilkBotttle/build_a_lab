@@ -16,7 +16,7 @@ source $VENV/bin/activate
 
 pip install ansible
 pip install vbmc
-pip install libvirt-python lxml
+pip install libvirt-python lxml selinux
 
 
 
