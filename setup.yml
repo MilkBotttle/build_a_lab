@@ -19,6 +19,6 @@
       virt_net:
         command: define
         name: "{{ item }}"
-		xml: "files/{{ item }}.xml"
+        xml: "files/{{ item }}.xml"
       with_items: [ "pxe","internal","nat"]
 
