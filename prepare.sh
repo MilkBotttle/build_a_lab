@@ -14,11 +14,7 @@ pip install virtualenv
 virtualenv $VENV
 source $VENV/bin/activate
 
-pip install ansible
-pip install vbmc
-pip install libvirt-python lxml selinux
-
-
+pip install ansible lxml selinux libvirt-python==5.0.0 virtualbmc==1.4.0
 
 # Install vagrant
 curl -o https://releases.hashicorp.com/vagrant/2.2.7/vagrant_2.2.7_x86_64.rpm $VAGRANT_RPM

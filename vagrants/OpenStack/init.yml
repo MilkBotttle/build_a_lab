@@ -24,4 +24,4 @@
     - name: Growup / (2/2)
       shell: |
         growpart /dev/vda 1
-	    xfs_growfs /
+        xfs_growfs /
