@@ -29,5 +29,6 @@ echo export VAGRANT_DEFAULT_PROVIDER=libvirt >> ~/.bashrc
 source ~/.bashrc
 
 set +e
-ssh-keygen -q -N ""
+echo "Generate ssh key, if exist won't create ..."
+cat /dev/zero | ssh-keygen -q -N "" > /dev/null
 set -e
