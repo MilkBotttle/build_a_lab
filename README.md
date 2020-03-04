@@ -1,16 +1,11 @@
-# build_a_lab
-This is for CentOS
+# Build a Lab
+This is for CentOS.
+Create a environment for multiple vm running create by vagrant.
 
 # Quick Start
-* Install dependencies and create a virtualenv save python library.
+Install vagrant, pip, ansible, libvirt.
 ```
-bash prepare.sh
-```
-Setup Env
-Create proxyvm service for ssh, and create virt-net for vm.
-```
-source venv/bin/activate
-ansible-playbook setup.yml
+bash -x prepare.sh
 ```
 
 # Vagrant up
@@ -22,9 +17,12 @@ vagrant up
 After vm create complete you can use those vm to deploy
 
 # How to use vbmc for baremetal service
-If use virtaulenv don't forget source environment.
 
 * Create port
+VMDOMAIN: vm name
+USERNAME: default admin
+PASSWORD: default password
+PORT: use a empty port
 ```
 vbmc add VMDOMAIN --username USERNAME --password PASSWORD --port PORT
 ```
@@ -45,13 +43,13 @@ vbmc delete VMDOMAIN
 lsof -Pni:[PORTA-PORTB]
 ```
 * test vbmc
-on hypervisor or vm 192.168.122.1 is KVM host default ip
+on hypervisor or vm, the 192.168.122.1 is KVM host default ip
 ```
 ipmitool -U USERNAME -P PASSWORD -H 192.168.122.1 -I lanplus -p PORT power status
 ```
 * firewall config
 ```
-firewall-cmd --permanent --zone=public --add-port=623-627/udp
+firewall-cmd --permanent --zone=public --add-port=[PORTA-PORTB]/udp
 firewall-cmd --reload
 ```
 

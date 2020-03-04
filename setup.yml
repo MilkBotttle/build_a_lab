@@ -1,10 +1,12 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  become: true
   tasks:
     - name: Install packages
       yum:
         name:
+          - ipmitool
           - libvirt
           - libvirt-devel
           - ruby-devel
@@ -18,35 +20,38 @@
           - python-devel
           - libvirt-devel
 
+    - name: Set ip forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+
     - name: Start libvirtd
       systemd:
         service: libvirtd
         state: started
 
-    - name: Install pip
-      shell: |
-        curl https://bootstrap.pypa.io/get-pip.py | python
-
-    - name: Install virtualenv
-      pip:
-        name: virtualenv
-
-    - name: Manually create the initial virtualenv
-      command:
-        cmd: virtualenv /root/venv
-        creates: "/root/venv"
-
     - name: Install python library
       pip:
         name:
-          - ansible
+          - ansible>=2.8
           - lxml
           - selinux
           - libvirt-python==5.0.0
           - virtualbmc==1.4.0
-        virtualenv: /root/venv
+          - virtualenv
 
-    - name: Install vagrant
+    - name: Generate openssh keypair
+      openssh_keypair:
+        path: /root/.ssh/id_rsa
+
+    - name: Insert vagrant provider config to bashrc
+      blockinfile:
+        path: /root/.bashrc
+        block: |
+          export VAGRANT_DEFAULT_PROVIDER=libvirt
+
+    - name: Install vagrant v2.2.7
       yum:
         name: 'https://releases.hashicorp.com/vagrant/2.2.7/vagrant_2.2.7_x86_64.rpm'
 
@@ -84,7 +89,4 @@
         command: define
         name: "nat"
         xml: '{{ lookup("template", "files/nat.xml") }}'
-
-
-
 
