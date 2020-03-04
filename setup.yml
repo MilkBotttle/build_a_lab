@@ -2,6 +2,29 @@
   connection: local
   gather_facts: no
   tasks:
+    - name: Install packages
+      yum:
+        name:
+          - libvirt
+          - libvirt-devel
+          - ruby-devel
+          - gcc
+          - qemu-kvm
+          - make
+          - automake
+          - gcc
+          - gcc-c++
+          - kernel-devel
+          - python-devel
+          - libvirt-devel
+
+    - name: Start libvirtd
+      systemd:
+        service: libvirtd
+        state: started
+
+    - name: Install vagrant
+      yum
     - name: Create ssh proxy service
       copy:
         src: files/proxy.service

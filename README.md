@@ -2,11 +2,12 @@
 This is for CentOS
 
 # Quick Start
-Install dependencies
+* Install dependencies and create a virtualenv save python library.
 ```
 bash prepare.sh
 ```
 Setup Env
+Create proxyvm service for ssh, and create virt-net for vm.
 ```
 source venv/bin/activate
 ansible-playbook setup.yml
@@ -21,7 +22,8 @@ vagrant up
 After vm create complete you can use those vm to deploy
 
 # How to use vbmc for baremetal service
-Don't forget to source venv
+If use virtaulenv don't forget source environment.
+
 * Create port
 ```
 vbmc add VMDOMAIN --username USERNAME --password PASSWORD --port PORT
