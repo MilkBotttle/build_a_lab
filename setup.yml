@@ -23,8 +23,33 @@
         service: libvirtd
         state: started
 
+    - name: Install pip
+      shell: |
+        curl https://bootstrap.pypa.io/get-pip.py | python
+
+    - name: Install virtualenv
+      pip:
+        name: virtualenv
+
+    - name: Manually create the initial virtualenv
+      command:
+        cmd: virtualenv /root/venv
+        creates: "/root/venv"
+
+    - name: Install python library
+      pip:
+        name:
+          - ansible
+          - lxml
+          - selinux
+          - libvirt-python==5.0.0
+          - virtualbmc==1.4.0
+        virtualenv: /root/venv
+
     - name: Install vagrant
-      yum
+      yum:
+        name: 'https://releases.hashicorp.com/vagrant/2.2.7/vagrant_2.2.7_x86_64.rpm'
+
     - name: Create ssh proxy service
       copy:
         src: files/proxy.service
