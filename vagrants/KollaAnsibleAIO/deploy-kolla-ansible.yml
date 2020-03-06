@@ -1,0 +1,65 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Install packages
+      yum:
+        name:
+          - python-devel
+          - libffi-devel
+          - gcc
+          - openssl-devel
+          - libselinux-python
+          - python-pip
+          - git
+
+    - name: install pip
+      shell: |
+        curl https://bootstrap.pypa.io/get-pip.py | python
+
+    - name: Install python library
+      pip:
+        name:
+          - ansible>=2.8
+          - kolla-ansible==8.1.0
+          - docker
+          - python-openstackclient==3.18.1
+
+    - name: Copy inventory
+      copy:
+        src: all-in-one
+        dest: /root/all-in-one
+
+    - name: Copy globals.yml
+      copy:
+        src: globals.yml
+        dest: /etc/kolla/globals.yml
+
+    - name: Copy etc_example
+      copy:
+        remote_src: yes
+        src: /usr/share/kolla-ansible/etc_examples/kolla
+        dest: /etc/kolla
+
+    - name: gen kolla password
+      raw: kolla-genpwd
+
+    - name: bootstrap server
+      raw: ansible-playbook -i /root/inventory bootstrap-servers
+
+    - name: prechecks server
+      raw: ansible-playbook -i /root/inventory prechecks
+
+    - name: deploy kolla-ansible
+      raw: ansible-playbook -i /root/inventory deploy
+
+    - name: Post config
+      raw: kolla-ansible -i /root/inventory post-deploy
+
+    - name: link rcfile
+      file:
+        remote_src: yes
+        state: link
+        src: /etc/kolla/admin-openrc.sh
+        dest: /root/admin-openrc.sh
+

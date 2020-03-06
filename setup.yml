@@ -68,25 +68,3 @@
         enabled: yes
         state: started
       when: copy_service.changed
-
-    - name: Create virsh net pxe
-      virt_net:
-        autostart: yes
-        command: define
-        name: "pxe"
-        xml: '{{ lookup("template", "files/pxe.xml") }}'
-
-    - name: Create virsh net internal
-      virt_net:
-        autostart: yes
-        command: define
-        name: "internal"
-        xml: '{{ lookup("template", "files/internal.xml") }}'
-
-    - name: Create virsh net nat
-      virt_net:
-        autostart: yes
-        command: define
-        name: "nat"
-        xml: '{{ lookup("template", "files/nat.xml") }}'
-
