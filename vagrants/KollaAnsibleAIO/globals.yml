@@ -18,7 +18,7 @@ kolla_base_distro: "centos"
 kolla_install_type: "source"
 
 # Valid option is Docker repository tag
-openstack_release: "setin"
+openstack_release: "stein"
 
 # Location of configuration overrides
 #node_custom_config: "/etc/kolla/config"
@@ -189,7 +189,7 @@ neutron_external_interface: "eth2"
 # These roles are required for Kolla to be operation, however a savvy deployer
 # could disable some of these required roles and run their own services.
 #enable_glance: "{{ enable_openstack_core | bool }}"
-enable_haproxy: "no"
+enable_haproxy: "false"
 #enable_keepalived: "{{ enable_haproxy | bool }}"
 #enable_keystone: "{{ enable_openstack_core | bool }}"
 #enable_mariadb: "yes"
