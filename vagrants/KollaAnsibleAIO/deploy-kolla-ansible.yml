@@ -10,12 +10,21 @@
           - gcc
           - openssl-devel
           - libselinux-python
-          - python-pip
           - git
 
-    - name: install pip
+    - name: Install pip (1/3)
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+
+    - name: Install pip (2/3)
       shell: |
-        curl https://bootstrap.pypa.io/get-pip.py | python
+        python /tmp/get-pip.py
+
+    - name: Install pip (3/3)
+      file:
+        path: /tmp/get-pip.py
+        state: absent
 
     - name: Install python library
       pip:
@@ -24,6 +33,12 @@
           - kolla-ansible==8.1.0
           - docker
           - python-openstackclient==3.18.1
+
+    - name: Copy etc_example to etc
+      copy:
+        remote_src: yes
+        src: /usr/share/kolla-ansible/etc_examples/kolla
+        dest: /etc
 
     - name: Copy inventory
       copy:
@@ -35,31 +50,33 @@
         src: globals.yml
         dest: /etc/kolla/globals.yml
 
-    - name: Copy etc_example
-      copy:
-        remote_src: yes
-        src: /usr/share/kolla-ansible/etc_examples/kolla
-        dest: /etc/kolla
 
-    - name: gen kolla password
-      raw: kolla-genpwd
+    - name: Copy kolla-anisble password
+      copy:
+        src: passwords.yml
+        dest: /etc/kolla/passwords.yml
 
     - name: bootstrap server
-      raw: ansible-playbook -i /root/inventory bootstrap-servers
+      raw: ansible-playbook -i /root/all-in-one bootstrap-servers
 
     - name: prechecks server
-      raw: ansible-playbook -i /root/inventory prechecks
+      raw: ansible-playbook -i /root/all-in-one prechecks
 
     - name: deploy kolla-ansible
-      raw: ansible-playbook -i /root/inventory deploy
+      raw: ansible-playbook -i /root/all-in-one deploy
 
     - name: Post config
-      raw: kolla-ansible -i /root/inventory post-deploy
+      raw: kolla-ansible -i /root/all-in-one post-deploy
 
     - name: link rcfile
       file:
         remote_src: yes
+        force: yes
         state: link
         src: /etc/kolla/admin-openrc.sh
         dest: /root/admin-openrc.sh
 
+    - name: fetch openstack rc file
+      fetch:
+        src: /etc/kolla/admin-openrc.sh
+        dest: admin-openrc.sh
