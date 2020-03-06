@@ -57,13 +57,13 @@
         dest: /etc/kolla/passwords.yml
 
     - name: bootstrap server
-      raw: ansible-playbook -i /root/all-in-one bootstrap-servers
+      raw: kolla-ansible -i /root/all-in-one bootstrap-servers
 
     - name: prechecks server
-      raw: ansible-playbook -i /root/all-in-one prechecks
+      raw: kolla-ansible -i /root/all-in-one prechecks
 
     - name: deploy kolla-ansible
-      raw: ansible-playbook -i /root/all-in-one deploy
+      raw: kolla-ansible -i /root/all-in-one deploy
 
     - name: Post config
       raw: kolla-ansible -i /root/all-in-one post-deploy
