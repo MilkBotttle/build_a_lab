@@ -40,6 +40,9 @@
         src: /usr/share/kolla-ansible/etc_examples/kolla
         dest: /etc
 
+    - name: Gen passwd
+      raw: kolla-genpwd
+
     - name: Copy inventory
       copy:
         src: all-in-one
@@ -49,7 +52,6 @@
       copy:
         src: globals.yml
         dest: /etc/kolla/globals.yml
-
 
     - name: Copy kolla-anisble password
       copy:
