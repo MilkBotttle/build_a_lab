@@ -15,12 +15,6 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "/root/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
   config.vm.provision "file", source: "/root/.ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
 
-  # ssh use key
-  config.vm.provision "shell", inline: <<-EOC
-    sudo sed -i -e "\\#PasswordAuthentication yes# s#PasswordAuthentication yes#PasswordAuthentication no#g" /etc/ssh/sshd_config
-    sudo systemctl restart sshd
-  EOC
-
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "init.yml"
   end
@@ -37,12 +31,24 @@ Vagrant.configure("2") do |config|
     end
 
     ka.vm.network :private_network,
-      :libvirt__network_name => "pxe"
+      libvirt__network_name: "pxe",
+      libvirt__network_address: "192.168.24.0",
+      libvirt__netmask: "255.255.255.0",
+      libvirt__dhcp_enabled: false,
+      libvirt__forward_mode: "none",
+      ip: "192.168.24.2"
 
+    ka.vm.network :private_network,
+      libvirt__network_name: "internal",
+      libvirt__network_address: "192.168.100.0",
+      libvirt__netmask: "255.255.255.0",
+      libvirt__dhcp_enabled: false,
+      libvirt__forward_mode: "none",
+      ip: "192.168.100.2"
   end
 
   # ctrl-nodes
-  (1..3).each do |i|
+  (3..5).each do |i|
     config.vm.define "ctrl-#{i}" do |node|
       node.vm.synced_folder ".", "/vagrant", type: "nfs"
       node.vm.hostname = "ctrl-#{i}"
@@ -53,15 +59,24 @@ Vagrant.configure("2") do |config|
         domain.machine_virtual_size = 100
       end
 
-      node.vm.network :private_network, :libvirt__network_name => "pxe"
-      node.vm.network :private_network, :libvirt__network_name => "internal"
-      node.vm.network :private_network, :libvirt__network_name => "external"
+      node.vm.network :private_network,
+        libvirt__network_name: "pxe",
+        ip: "192.168.24.#{i}"
+
+      node.vm.network :private_network,
+        libvirt__network_name: "internal",
+        ip: "192.168.100.#{i}"
+
+      node.vm.network :public_network, type: "bridge",
+        dev: "br-inwinstack",
+        mode: "bridge",
+        network_name: "public-network"
 
     end
   end
 
   # com-nodes
-  (1..2).each do |i|
+  (11..12).each do |i|
     config.vm.define "com-#{i}" do |node|
       node.vm.synced_folder ".", "/vagrant", type: "nfs"
       node.vm.hostname = "com-#{i}"
@@ -72,9 +87,18 @@ Vagrant.configure("2") do |config|
         domain.machine_virtual_size = 100
       end
 
-      node.vm.network :private_network, :libvirt__network_name => "pxe"
-      node.vm.network :private_network, :libvirt__network_name => "internal"
-      node.vm.network :private_network, :libvirt__network_name => "external"
+      node.vm.network :private_network,
+        libvirt__network_name: "pxe",
+        ip: "192.168.24.#{i}"
+
+      node.vm.network :private_network,
+        libvirt__network_name: "internal",
+        ip: "192.168.100.#{i}"
+
+      node.vm.network :public_network, type: "bridge",
+        dev: "br-inwinstack",
+        mode: "bridge",
+        network_name: "public-network"
 
     end
   end

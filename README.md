@@ -8,13 +8,15 @@ Install vagrant, pip, ansible, libvirt.
 bash -x prepare.sh
 ```
 
-# Vagrant up
+# Vagrant up a lab
+There created clean, enough nodes and configured network for deploy kolla-ansible.
+After up complete use `vagrant ssh ka` login to deploy node.
 ```
 cp -r vagrants/OpenStack ~
 cd ~/OpenStack
 vagrant up
 ```
-After vm create complete you can use those vm to deploy
+You can use this for test kolla-ansible ironic, but you need remove nodes vagrant management network interface `vagrant-libvirt` from each controller and compute nodes.
 
 # How to use vbmc for baremetal service
 
@@ -45,7 +47,7 @@ lsof -Pni:[PORTA-PORTB]
 * test vbmc
 on hypervisor or vm, the 192.168.122.1 is KVM host default ip
 ```
-ipmitool -U USERNAME -P PASSWORD -H 192.168.122.1 -I lanplus -p PORT power status
+ipmitool -U USERNAME -P PASSWORD -H 192.168.121.1 -I lanplus -p PORT power status
 ```
 * firewall config
 ```
