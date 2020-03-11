@@ -1,0 +1,54 @@
+<domain type='qemu'>
+  <name>{{ item }}</name>
+  <memory unit='MiB'>{{ baremetal_memory_mb }}</memory>
+  <vcpu>2</vcpu>
+
+  <os>
+    <type arch='x86_64'>hvm</type>
+    <boot dev='network'/>
+    <bootmenu enable='no'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <pae/>
+  </features>
+  <cpu mode='host-passthrough'/>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>restart</on_crash>
+  <devices>
+    <disk type='volume' device='disk'>
+      <driver name='qemu' type='qcow2' cache='unsafe'/>
+      <source pool='{{ libvirt_volume_pool }}' volume='{{ item.name }}.qcow2'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+{% for network in networks %}
+{% if network.forward_mode == 'bridge' %}
+    <interface type='bridge'>
+      <mac address='{{ node_mac_map.get(item.name).get(network.name) }}'/>
+      <source bridge='{{ network.bridge }}'/>
+      <model type='virtio'/>
+    </interface>
+{% else %}
+    <interface type='network'>
+      <mac address='{{ node_mac_map.get(item.name).get(network.name) }}'/>
+      <source bridge='{{ network.bridge }}'/>
+      <model type='virtio'/>
+    </interface>
+{% endif %}
+{% endfor %}
+
+    <serial type='pty'/>
+    <console type='pty'/>
+
+
+    <input type='mouse' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes'/>
+    <video>
+      <model type='cirrus' vram='9216' heads='1'/>
+    </video>
+
+  </devices>
+</domain>

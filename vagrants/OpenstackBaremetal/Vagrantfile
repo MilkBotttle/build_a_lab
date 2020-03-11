@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Global
+  config.vm.box = "centos/7"
+
+  # Global ssh key config
+
+  config.ssh.insert_key = false
+  config.ssh.private_key_path = ["/root/.ssh/id_rsa", "~/.vagrant.d/insecure_private_key"]
+
+  # vagrant user
+  config.vm.provision "file", source: "/root/.ssh/id_rsa.pub", destination: "~/.ssh/authorized_keys"
+  config.vm.provision "file", source: "/root/.ssh/id_rsa.pub", destination: "~/.ssh/id_rsa.pub"
+  config.vm.provision "file", source: "/root/.ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "init.yml"
+  end
+
+  # Deploy
+  config.vm.define "ka" do |ka|
+    ka.vm.synced_folder ".", "/vagrant", type: "nfs"
+    ka.vm.hostname = "ka"
+    ka.vm.provider :libvirt do |domain|
+      domain.cpus = 2
+      domain.memory = 1024*4
+      domain.volume_cache = "unsafe"
+      domain.machine_virtual_size = 100
+    end
+
+    ka.vm.network :private_network,
+      libvirt__network_name: "pxe",
+      libvirt__network_address: "192.168.24.0",
+      libvirt__netmask: "255.255.255.0",
+      libvirt__dhcp_enabled: false,
+      libvirt__forward_mode: "none",
+      ip: "192.168.24.2"
+
+    ka.vm.network :private_network,
+      libvirt__network_name: "internal",
+      libvirt__network_address: "192.168.100.0",
+      libvirt__netmask: "255.255.255.0",
+      libvirt__dhcp_enabled: false,
+      libvirt__forward_mode: "none",
+      ip: "192.168.100.2"
+  end
+
+end

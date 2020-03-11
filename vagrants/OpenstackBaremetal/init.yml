@@ -1,0 +1,27 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: Set root authorized key
+      authorized_key:
+        user: root
+        key: "{{ lookup('file','/root/.ssh/id_rsa.pub') }}"
+
+    - name: Copy private key
+      copy:
+        src: "/root/.ssh/id_rsa"
+        dest: "/root/.ssh/id_rsa"
+
+    - name: Copy public key
+      copy:
+        src: "/root/.ssh/id_rsa.pub"
+        dest: "/root/.ssh/id_rsa.pub"
+
+    - name: Growup / (1/2)
+      yum:
+        name: cloud-utils-growpart
+
+    - name: Growup / (2/2)
+      shell: |
+        growpart /dev/vda 1
+        xfs_growfs /
