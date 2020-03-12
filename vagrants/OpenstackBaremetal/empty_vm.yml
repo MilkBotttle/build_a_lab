@@ -1,9 +1,10 @@
 - hosts: localhost
   connection: local
   gather_facts: no
+  become: true
   vars:
     libvirt_pool_path: "/opt/baremetal_pool"
-    libvirt_pool_name: "baremetalpool"
+    libvirt_pool_name: "baremetal_pool"
     libvirt_uri: "qemu:///session"
     baremetal_nodes:
       - name: "ctrl1"
@@ -23,6 +24,37 @@
     baremetal_disk_gb: 40
 
   tasks:
+    - name: Get pxe network bridge name
+      virt_net:
+        command: get_xml
+        name: pxe
+      register: pxe_xml
+
+    - name: Parse pxe xml
+      xml:
+        xmlstring: "{{ pxe_xml.get_xml }}"
+        xpath: /network/bridge
+        content: attribute
+      register: pxe_xmlresp
+
+    - name: Get internal network bridge name
+      virt_net:
+        command: get_xml
+        name: internal
+      register: internal_xml
+
+    - name: Parse internal xml
+      xml:
+        xmlstring: "{{ internal_xml.get_xml }}"
+        xpath: /network/bridge
+        content: attribute
+      register: internal_xmlresp
+
+    - name: Read bridge name from register
+      set_fact:
+        pxe_bridge: "{{ pxe_xmlresp.matches[0].bridge.name }}"
+        internal_bridge: "{{ internal_xmlresp.matches[0].bridge.name }}"
+
     - name: Ensure libvirt volume path exists
       become: true
       file:
@@ -60,7 +92,7 @@
 
     - name: Create volume for baremetal node
       command: >
-        virsh vol-create-as {{ libvirt_volume_pool }}
+        virsh vol-create-as {{ libvirt_pool_name }}
         {{ item.name }}.qcow2
         {{ baremetal_disk_gb }}G --format qcow2
       with_items: "{{ baremetal_nodes }}"

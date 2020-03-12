@@ -1,5 +1,5 @@
 <domain type='qemu'>
-  <name>{{ item }}</name>
+  <name>{{ item.name }}</name>
   <memory unit='MiB'>{{ baremetal_memory_mb }}</memory>
   <vcpu>2</vcpu>
 
@@ -21,7 +21,7 @@
   <devices>
     <disk type='volume' device='disk'>
       <driver name='qemu' type='qcow2' cache='unsafe'/>
-      <source pool='{{ libvirt_volume_pool }}' volume='{{ item.name }}.qcow2'/>
+      <source pool='{{ libvirt_pool_name }}' volume='{{ item.name }}.qcow2'/>
       <target dev='vda' bus='virtio'/>
     </disk>
 {% for network in networks %}
@@ -31,12 +31,19 @@
       <source bridge='{{ network.bridge }}'/>
       <model type='virtio'/>
     </interface>
+{% elif network.name == 'pxe' %}
+    <interface type='network'>
+      <mac address='{{ node_mac_map.get(item.name).get(network.name) }}'/>
+      <source network='{{ network.name }}' bridge='{{ pxe_bridge }}'/>
+      <model type='virtio'/>
+    </interface>
 {% else %}
     <interface type='network'>
       <mac address='{{ node_mac_map.get(item.name).get(network.name) }}'/>
-      <source bridge='{{ network.bridge }}'/>
+      <source network='{{ network.name }}' bridge='{{ internal_bridge }}'/>
       <model type='virtio'/>
     </interface>
+
 {% endif %}
 {% endfor %}
 
