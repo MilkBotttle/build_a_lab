@@ -1,0 +1,112 @@
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  become: true
+  vars:
+    libvirt_pool_path: "/opt/baremetal_pool"
+    libvirt_pool_name: "baremetal_pool"
+    libvirt_uri: "qemu:///session"
+    baremetal_nodes:
+      - name: "ctrl1"
+      - name: "ctrl2"
+      - name: "ctrl3"
+      - name: "com1"
+      - name: "com2"
+    networks:
+      - name: "pxe"
+        forward_mode: "none"
+      - name: "internal"
+        forward_mode: "none"
+      - name: "external"
+        forward_mode: "bridge"
+        bridge: "br-inwinstack"
+    baremetal_memory_mb: 8192
+    baremetal_disk_gb: 40
+
+  tasks:
+    - name: Get pxe network bridge name
+      virt_net:
+        command: get_xml
+        name: pxe
+      register: pxe_xml
+
+    - name: Parse pxe xml
+      xml:
+        xmlstring: "{{ pxe_xml.get_xml }}"
+        xpath: /network/bridge
+        content: attribute
+      register: pxe_xmlresp
+
+    - name: Get internal network bridge name
+      virt_net:
+        command: get_xml
+        name: internal
+      register: internal_xml
+
+    - name: Parse internal xml
+      xml:
+        xmlstring: "{{ internal_xml.get_xml }}"
+        xpath: /network/bridge
+        content: attribute
+      register: internal_xmlresp
+
+    - name: Read bridge name from register
+      set_fact:
+        pxe_bridge: "{{ pxe_xmlresp.matches[0].bridge.name }}"
+        internal_bridge: "{{ internal_xmlresp.matches[0].bridge.name }}"
+
+    - name: Ensure libvirt volume path exists
+      become: true
+      file:
+        path: "{{ libvirt_pool_path }}"
+        state: directory
+        mode: 0755
+
+    - name: Check volume pool
+      command: >
+        virsh pool-uuid "{{ libvirt_pool_name }}"
+      register: pool_check
+      ignore_errors: true
+      changed_when: false
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: create the volume pool xml file
+      template:
+        src: "volume_pool.j2.xml"
+        dest: "volume_pool.xml"
+      when: pool_check is failed
+
+    - name: Define volume pool
+      command: "virsh pool-define volume_pool.xml"
+      when: pool_check is failed
+      environment:
+        LIBVIRT_DEFAULT_URI: "{{ libvirt_uri }}"
+
+    - name: Start volume pool
+      virt_pool:
+        command: start
+        state: active
+        name: "{{ libvirt_pool_name }}"
+        uri: "{{ libvirt_uri }}"
+
+    - name: Create volume for baremetal node
+      command: >
+        virsh vol-create-as {{ libvirt_pool_name }}
+        {{ item.name }}.qcow2
+        {{ baremetal_disk_gb }}G --format qcow2
+      with_items: "{{ baremetal_nodes }}"
+
+    - name: Generate macs
+      gen_macs:
+        nodes: "{{ baremetal_nodes }}"
+        networks: "{{ networks }}"
+      register: node_mac_map
+
+    - name: Define baremetal vm
+      virt:
+        name: "{{ item.name }}"
+        command: define
+        xml: "{{ lookup('template', 'baremetalvm.xml.j2') }}"
+        uri: "{{ libvirt_uri }}"
+      with_items: "{{ baremetal_nodes }}"
